@@ -128,3 +128,155 @@ Edge cases and tips:
 - Combine with capabilities to avoid probing currencies a corridor cannot support anyway.
 - Cache discovery results keyed by (direction, segment) and the snapshots’ versions for snappy UI.
 
+## Single-call eligibility (CustomerId only)
+
+Goal: With only `customerId` (and optional preferred `direction`), return everything the UI needs to render valid choices:
+- Available directions (IN, OUT, INT, OWN) that can produce a GREEN route for the customer
+- Available currencies for those directions
+- Available destination countries for those directions
+- Supported charge-bearers (BEN/SHA/OWN) observed across any GREEN route combinations
+
+Approach
+1) Build candidate sets:
+   - Directions: from your product policy (e.g., {"IN","OUT","INT","OWN"})
+   - Currencies: union of currencies from capabilities snapshot
+   - Countries: either from a configured whitelist or by introspecting rules predicates for `PR.CPartyBankCountryCode`
+2) For each direction D:
+   - For each country C and currency cur, evaluate with minimal request (no BIC). Run full pipeline (evaluation + post-processing) so capability constraints (currency/charge-bearer) apply.
+   - If GREEN exists, record D as supported; add C to D.countries; add cur to D.currencies.
+   - For each GREEN route, look up capabilities for (route.CorrBankBic, cur) and collect `supportedCharges` into D.chargeBearersAny (union) and D.chargeBearersCommon (intersection).
+3) Return a compact DTO with per-direction aggregates and snapshot versions for caching.
+
+Pseudocode
+
+```csharp
+public sealed record EligibilityRequest(
+  string CustomerId,
+  string? PreferredDirection = null,
+  string[]? CurrencyWhitelist = null,
+  string[]? CountryWhitelist = null,
+  string? PreferredChargeBearer = null // BEN|SHA|OWN
+);
+
+public sealed record DirectionEligibility(
+  string Direction,
+  string[] Countries,
+  string[] Currencies,
+  string[] ChargeBearersAny,
+  string[] ChargeBearersCommon
+);
+
+public sealed record EligibilityResponse(
+  long RulesVersion,
+  long CapabilitiesVersion,
+  DirectionEligibility[] Directions
+);
+
+public async Task<EligibilityResponse> ComputeEligibilityAsync(EligibilityRequest req)
+{
+  var caps = await capabilitiesStore.GetSnapshotAsync();
+  var rules = await ruleStore.GetSnapshotAsync();
+
+  var allCurrencies = (req.CurrencyWhitelist?.ToHashSet(StringComparer.OrdinalIgnoreCase)
+    ?? caps.BicToCurrencyCapabilities.SelectMany(kvp => kvp.Value.Keys)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+  var candidateCountries = (req.CountryWhitelist?.ToHashSet(StringComparer.OrdinalIgnoreCase)
+    ?? LoadCandidateCountriesFromRules(rules)); // or a configured whitelist
+
+  var directions = req.PreferredDirection != null
+    ? new[] { req.PreferredDirection.ToUpperInvariant() }
+    : new[] { "IN", "OUT", "INT", "OWN" };
+
+  var results = new List<DirectionEligibility>();
+  foreach (var dir in directions)
+  {
+    var countries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    var currencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    HashSet<string>? commonCharges = null; // intersection accumulator
+    var anyCharges = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    foreach (var country in candidateCountries)
+    {
+      foreach (var cur in allCurrencies)
+      {
+        var baseCtx = new RoutingContext(
+          new PaymentContext(ParseDirection(dir), cur, req.PreferredChargeBearer),
+          new CounterpartyContext(country, bankBic: null, account: null, name: null, type: null),
+          new CustomerContext(req.CustomerId, industry: null, type: null, account: null));
+
+        var decision = await engineHost.EvaluateAsync(baseCtx);
+        if (decision.Decision == RoutingDecision.CanRoute && decision.GreenRoutes.Count > 0)
+        {
+          countries.Add(country);
+          currencies.Add(cur);
+
+          // Collect charge-bearers from capabilities for each GREEN route
+          if (caps.BicToCurrencyCapabilities is { } map)
+          {
+            foreach (var route in decision.GreenRoutes)
+            {
+              if (map.TryGetValue(route.CorrBankBic, out var byCur) && byCur.TryGetValue(cur, out var cc))
+              {
+                var supported = (cc.SupportedCharges ?? Array.Empty<string>()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                if (commonCharges is null)
+                {
+                  commonCharges = new HashSet<string>(supported, StringComparer.OrdinalIgnoreCase);
+                }
+                else
+                {
+                  commonCharges.IntersectWith(supported);
+                }
+                anyCharges.UnionWith(supported);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (countries.Count > 0)
+    {
+      results.Add(new DirectionEligibility(
+        dir,
+        countries.OrderBy(x => x).ToArray(),
+        currencies.OrderBy(x => x).ToArray(),
+        anyCharges.OrderBy(x => x).ToArray(),
+        (commonCharges ?? new HashSet<string>()).OrderBy(x => x).ToArray()));
+    }
+  }
+
+  return new EligibilityResponse(rules.Version, caps.Version, results.ToArray());
+}
+```
+
+Response example
+
+```json
+{
+  "rulesVersion": 12,
+  "capabilitiesVersion": 5,
+  "directions": [
+  {
+    "direction": "OUT",
+    "countries": ["GR", "DE", "CY"],
+    "currencies": ["EUR", "USD"],
+    "chargeBearersAny": ["OWN", "SHA"],
+    "chargeBearersCommon": ["SHA"]
+  },
+  {
+    "direction": "IN",
+    "countries": ["GR"],
+    "currencies": ["EUR"],
+    "chargeBearersAny": ["BEN", "SHA"],
+    "chargeBearersCommon": ["SHA"]
+  }
+  ]
+}
+```
+
+Notes
+- Normalize charge-bearers: map OUR→OWN at input; present OWN in responses.
+- UI can show only options found in `chargeBearersAny` to avoid dead ends; for stricter UX, use `chargeBearersCommon` until country/currency is chosen.
+- Cache the response per (customerId, preferredDirection) and invalidate when `rulesVersion` or `capabilitiesVersion` changes.
+
