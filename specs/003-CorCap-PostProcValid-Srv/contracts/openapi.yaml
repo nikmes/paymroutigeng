@@ -34,6 +34,9 @@ components:
                   type: string
                 currency:
                   type: string
+                chargeBearer:
+                  type: string
+                  description: "BEN, SHA, OUR (OWN accepted and normalized to OUR)"
             counterparty:
               type: object
               properties:
@@ -78,6 +81,7 @@ components:
         corrBankBic: { type: string }
         description: { type: string }
         currency: { type: string, description: 'Payment currency (echo)'}
+        chargeBearer: { type: string, description: 'Charge bearer (echo after normalization)'}
         nostroIban: { type: string, description: 'Corridor Nostro IBAN for currency if supported' }
     RedRoute:
       type: object

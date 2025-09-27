@@ -3,14 +3,14 @@
 ## Workstreams
 1) Spec and API contract updates
 2) Capabilities storage abstraction and JSON implementation
-3) Post-processing pipeline and currency support validator
+3) Post-processing pipeline and validators (currency + charge-bearer)
 4) Minimal HTTP service host wiring
 5) Tests (unit + scenario snapshots) and benchmarks update
 
 ## Milestones
 - M1: Spec docs drafted; sample capabilities file added
 - M2: ICapabilitiesStore + JsonFileCapabilitiesStore implemented
-- M3: CurrencySupportPostProcessor integrated into RoutingEngineHost pipeline
+- M3: CapabilityPostProcessor (currency + charge-bearer) integrated into RoutingEngineHost pipeline
 - M4: Minimal API host with DI + configuration
 - M5: Tests green (unit, scenario), sample run in README/quickstart
 
@@ -18,10 +18,11 @@
 - Rule/Capability duplication: Keep capabilities out of rules; validate post-eval
 - Performance overhead: Cache snapshot, O(1) BIC lookup (dictionary), measure delta
 - Data drift: Version snapshots; optional FileSystemWatcher later
+- Ambiguity in charge-bearer terms: Normalize OWN→OUR, constrain to [BEN,SHA,OUR]
 
 ## Deliverables
 - docs: spec.md, plan.md, tasks.md, quickstart.md, contracts/openapi.yaml (delta)
 - code: capabilities store interfaces and JSON impl; post-processor; host wiring
 - tests: unit + scenario
-- samples: capabilities.sample.json
+- samples: capabilities.sample.json (including supportedCharges)
 
