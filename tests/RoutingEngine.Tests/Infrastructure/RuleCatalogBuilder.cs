@@ -65,6 +65,11 @@ internal static class RuleCatalogBuilder
             map["PR.CustomerType"] = definition.CustomerType;
         }
 
+        if (!string.IsNullOrWhiteSpace(definition.CustomerAccount))
+        {
+            map["PR.CustomerAccount"] = definition.CustomerAccount;
+        }
+
         if (!string.IsNullOrWhiteSpace(definition.PaymentDirection))
         {
             map["PR.PaymentDirection"] = definition.PaymentDirection;
@@ -95,6 +100,7 @@ internal sealed record RuleDefinition
     public string? CustomerId { get; init; }
     public string? CustomerIndustry { get; init; }
     public string? CustomerType { get; init; }
+    public string? CustomerAccount { get; init; }
     public string? PaymentDirection { get; init; }
     public string? PaymentCurrency { get; init; }
 }

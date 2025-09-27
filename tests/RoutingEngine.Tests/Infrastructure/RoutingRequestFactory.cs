@@ -59,6 +59,7 @@ internal static class RoutingRequestFactory
         private string? _id;
         private string? _industry;
         private string? _type;
+        private string? _account;
 
         public CustomerBuilder WithId(string value)
         {
@@ -78,6 +79,12 @@ internal static class RoutingRequestFactory
             return this;
         }
 
-        public CustomerDto Build() => new(_id, _industry, _type);
+        public CustomerBuilder WithAccount(string value)
+        {
+            _account = value;
+            return this;
+        }
+
+        public CustomerDto Build() => new(_id, _industry, _type, _account);
     }
 }

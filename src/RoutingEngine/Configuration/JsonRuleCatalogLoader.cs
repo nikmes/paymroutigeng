@@ -120,6 +120,7 @@ public sealed class JsonRuleCatalogLoader
                 CustomerId = NormalizeOptional(dto.CustomerId),
                 CustomerIndustry = NormalizeUpper(dto.CustomerIndustry),
                 CustomerType = customerType,
+                CustomerAccount = NormalizeOptional(dto.CustomerAccount),
                 PaymentDirection = paymentDirection,
                 PaymentCurrency = NormalizeUpper(dto.PaymentCurrency)
             });
@@ -294,6 +295,9 @@ public sealed class JsonRuleCatalogLoader
 
         [JsonPropertyName("PR.CustomerType")]
         public string? CustomerType { get; init; }
+
+    [JsonPropertyName("PR.CustomerAccount")]
+    public string? CustomerAccount { get; init; }
 
         [JsonPropertyName("PR.PaymentDirection")]
         public string? PaymentDirection { get; init; }

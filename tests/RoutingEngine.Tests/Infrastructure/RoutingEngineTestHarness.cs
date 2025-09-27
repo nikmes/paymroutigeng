@@ -46,7 +46,8 @@ internal static class RoutingEngineTestHarness
         var customer = new CustomerContext(
             request.Customer.Id,
             request.Customer.Industry,
-            customerType);
+            customerType,
+            request.Customer.Account);
 
         return new RoutingContext(payment, counterparty, customer);
     }
@@ -261,4 +262,4 @@ public sealed record PaymentDto(string Direction, string Currency);
 
 public sealed record CounterpartyDto(string? BankCountryCode, string? BankBic, string? Account, string? Name);
 
-public sealed record CustomerDto(string? Id, string? Industry, string? Type);
+public sealed record CustomerDto(string? Id, string? Industry, string? Type, string? Account);

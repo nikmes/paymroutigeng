@@ -47,6 +47,9 @@ public sealed record RoutingRule
     /// <summary>Initiating customer type condition.</summary>
     public CustomerType? CustomerType { get; init; }
 
+    /// <summary>Initiating customer's account identifier condition.</summary>
+    public string? CustomerAccount { get; init; }
+
     /// <summary>Payment direction condition.</summary>
     public PaymentDirection? PaymentDirection { get; init; }
 

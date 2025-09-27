@@ -24,7 +24,7 @@ This document defines the rule-driven payment routing capability required to det
 
 ## Glossary
 - **Rule** – A configuration record representing a set of predicates and the target correspondent bank to use when those predicates are met.
-- **Condition** – An individual comparison derived from a populated rule field (for example `PR.PaymentDirection = "IN"`).
+- **Condition** – An individual comparison derived from a populated rule field (for example `PR.PaymentDirection = "IN"` or `PR.CustomerAccount = "DE..."`).
 - **Outcome Policy** – Defines the effect of a matched rule (`PassOnMatch` issues a route, `FailOnMatch` blocks the payment).
 - **Operator** – Logical combinator applied across all conditions inside a rule (`ALL`, `ANY`, `NONE`, `ONE`).
 - **CorrBankBIC** – BIC of the correspondent bank to use when a rule passes.
@@ -45,6 +45,7 @@ Each rule is persisted as a flat structure. Fields below are optional unless fla
 | `PR.CustomerId` | string | ❌ | Up to 64 characters | Exact match. |
 | `PR.CustomerIndustry` | string | ❌ | Enumerated codes (e.g., `I001`) | Case-insensitive match. |
 | `PR.CustomerType` | string | ❌ | `INDIVIDUAL`, `CORPORATE` | Normalize to uppercase (typo `COORPORATE` is treated as `CORPORATE`). |
+| `PR.CustomerAccount` | string | ❌ | Up to 34 characters; IBAN or domestic account | Whitespace ignored for comparison. |
 | `PR.PaymentDirection` | string | ❌ | `IN`, `OUT`, `INT`, `OWN` | Uppercase comparison. |
 | `PR.PaymentCurrency` | string | ❌ | ISO 4217 alpha-3 (e.g., `EUR`, `GBP`, `USD`) | Uppercase comparison. |
 | `CorrBankBIC` | string | ✅ | Valid BIC11 | Route identifier produced by the rule. Required for both `PassOnMatch` and `FailOnMatch` to support GREEN/RED route reporting. |
@@ -113,7 +114,8 @@ The routing engine is exposed over HTTP.
     "customer": {
       "id": "CUST-001",
       "industry": "I001",
-      "type": "CORPORATE"
+  "type": "CORPORATE",
+  "account": "DE44500105175407324931"
     }
   }
 }

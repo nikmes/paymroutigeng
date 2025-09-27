@@ -27,6 +27,7 @@ public sealed class RuleConditionFactory
         AppendPredicate(predicateList, rule.CounterpartyName, ctx => _normalizer.Equals(ctx.Counterparty.Name, rule.CounterpartyName));
         AppendPredicate(predicateList, rule.CustomerId, ctx => _normalizer.Equals(ctx.Customer.Id, rule.CustomerId));
         AppendPredicate(predicateList, rule.CustomerIndustry, ctx => _normalizer.Equals(ctx.Customer.Industry, rule.CustomerIndustry));
+    AppendPredicate(predicateList, rule.CustomerAccount, ctx => _normalizer.Equals(ctx.Customer.Account, rule.CustomerAccount));
         AppendPredicate(predicateList, rule.PaymentCurrency, ctx => _normalizer.Equals(ctx.Payment.Currency, rule.PaymentCurrency));
 
         if (rule.CustomerType is not null)

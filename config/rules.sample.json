@@ -9,7 +9,8 @@
     "RuleStatus": "ON",
     "PR.PaymentDirection": "OUT",
     "PR.PaymentCurrency": "EUR",
-    "PR.CustomerType": "CORPORATE"
+  "PR.CustomerType": "CORPORATE",
+  "PR.CustomerAccount": "DE44500105175407324931"
   },
   {
     "RuleCodeName": "RULE-BLOCK-HI-RISK",

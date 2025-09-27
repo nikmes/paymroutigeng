@@ -97,7 +97,8 @@ public sealed class RuleEvaluationPropertyTests
             var customer = new CustomerDto(
                 Maybe($"CUST-{_random.Next(1, 999):000}"),
                 MaybeFrom(IndustryPool),
-                MaybeFrom(CustomerTypes));
+                MaybeFrom(CustomerTypes),
+                Maybe($"DE{_random.Next(10_000_000, 99_999_999)}{_random.Next(10_000_000, 99_999_999)}"));
 
             return new RoutingRequestDto(
                 new PaymentDto(direction, currency),

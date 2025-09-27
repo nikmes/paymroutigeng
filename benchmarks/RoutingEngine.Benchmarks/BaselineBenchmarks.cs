@@ -36,7 +36,7 @@ public class BaselineBenchmarks
     {
         var payment = new PaymentContext(PaymentDirection.Out, "EUR");
         var counterparty = new CounterpartyContext("US", "ACMEUS33XXX", null, "ACME OFFSHORE");
-        var customer = new CustomerContext("CUST-042", "FINTECH", CustomerType.Corporate);
+    var customer = new CustomerContext("CUST-042", "FINTECH", CustomerType.Corporate, "DE44500105175407324931");
         return new RoutingContext(payment, counterparty, customer);
     }
 
