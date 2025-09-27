@@ -199,6 +199,16 @@ The routing engine is exposed over HTTP.
 | 400 | Invalid request (missing required context) | `{ "error": "INVALID_CONTEXT", "details": "payment.currency is required" }` |
 | 500 | Internal error | `{ "error": "INTERNAL_ERROR", "details": "Unexpected failure" }` |
 
+## Rule storage (Phase 1.2)
+- Abstraction to support multiple rule sources without modifying the engine.
+- Interfaces:
+  - `IRuleStore` → returns a versioned `RuleCatalogSnapshot`.
+  - `IMutableRuleStore` → extends `IRuleStore` with add/update/remove (tests and admin tools).
+- Implementations shipped:
+  - `InMemoryRuleStore` (thread-safe, supports runtime mutations).
+  - `JsonFileRuleStore` (uses existing JSON loader, bumps snapshot version on file changes).
+- `RoutingEngineHost` caches the core `RoutingEngine` by snapshot version and rebuilds when rules change.
+
 ## Validation Rules
 - Incoming request values must be normalized (trim, uppercase for codes) before comparison.
 - `CorrBankBIC` must conform to ISO 9362 (11-character BIC). Reject rule creation if invalid.
