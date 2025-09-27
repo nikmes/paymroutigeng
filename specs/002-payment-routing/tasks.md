@@ -34,8 +34,8 @@
 ## Phase 3.5: Validation & Polish
 - [x] T021 [P] Implement regression fixtures in `tests/RoutingEngine.Tests/ScenarioSnapshotTests.cs` using Verify to capture GREEN/RED outputs for real-world cases (update snapshots post-implementation).
 - [x] T022 Execute `dotnet test --configuration Release` ensuring all tests now pass and update Verify snapshots as needed.
-- [ ] T023 Run benchmarks via `dotnet run --project benchmarks/RoutingEngine.Benchmarks --configuration Release` and record latency results (<10 ms) in `specs/002-payment-routing/quickstart.md`.
-- [ ] T024 [P] Update documentation (`quickstart.md`, new `README` section if needed) with configuration instructions, Serilog usage, and benchmark outcomes.
+- [x] T023 Run benchmarks via `dotnet run --project benchmarks/RoutingEngine.Benchmarks --configuration Release` and record latency results (<10 ms) in `specs/002-payment-routing/quickstart.md`.
+- [x] T024 [P] Update documentation (`quickstart.md`, new `README` section if needed) with configuration instructions, Serilog usage, and benchmark outcomes.
 
 ## Dependencies
 - T002 depends on T001; T003 depends on T002; T004 depends on T002.

@@ -43,6 +43,13 @@
   dotnet run --project benchmarks/RoutingEngine.Benchmarks --configuration Release
   ```
 - Benchmark output is written to `BenchmarkDotNet.Artifacts/results/`. The Phase 1 acceptance gate is **<10 ms** mean latency per evaluation for catalogs up to 1,000 rules.
+- Latest run (2025-09-27, Lenovo laptop, .NET SDK 9.0.305):
+  | Rules | Mean latency | StdDev | Allocated |
+  | ----- | ------------ | ------ | --------- |
+  | 10    | 1.07 µs      | 0.02 µs | 4.27 KB   |
+  | 100   | 9.71 µs      | 0.07 µs | 31.16 KB  |
+  | 1,000 | 101.85 µs    | 0.44 µs | 297.54 KB |
+  All scenarios land well under the 10 ms target, leaving ample runway for Phase 2 overhead.
 
 ## Logging & Diagnostics
 - Serilog writes structured logs to the console. Adjust the minimum level via `RoutingEngine:MinimumLogLevel` or the `ROUTING_LOG_LEVEL` environment variable.
