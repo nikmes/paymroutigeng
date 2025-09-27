@@ -3,8 +3,8 @@
     {
       "bic": "DEUTDEFFXXX",
       "currencies": [
-        { "code": "EUR", "nostroIban": "DE12123456789012345678", "supportedCharges": ["BEN","SHA","OUR"] },
-        { "code": "USD", "nostroIban": "DE34987654321098765432", "supportedCharges": ["SHA","OUR"] }
+  { "code": "EUR", "nostroIban": "DE12123456789012345678", "supportedCharges": ["BEN","SHA","OWN"] },
+  { "code": "USD", "nostroIban": "DE34987654321098765432", "supportedCharges": ["SHA","OWN"] }
       ]
     },
     {

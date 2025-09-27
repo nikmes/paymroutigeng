@@ -5,6 +5,7 @@ internal static class RoutingRequestFactory
     public static RoutingRequestDto Create(
         string direction,
         string currency,
+        string? chargeBearer = null,
         Action<CounterpartyBuilder>? counterparty = null,
         Action<CustomerBuilder>? customer = null)
     {
@@ -15,7 +16,7 @@ internal static class RoutingRequestFactory
         customer?.Invoke(customerBuilder);
 
         return new RoutingRequestDto(
-            new PaymentDto(direction, currency),
+            new PaymentDto(direction, currency, chargeBearer),
             counterpartyBuilder.Build(),
             customerBuilder.Build());
     }

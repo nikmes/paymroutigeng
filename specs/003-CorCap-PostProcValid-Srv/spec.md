@@ -51,7 +51,7 @@ Example (config/capabilities.sample.json):
      - If capabilities contain the route.corrBankBic AND a currency entry matching request.payment.currency → proceed
      - Else → move to RED with reason: `CAPABILITY:CURRENCY_UNSUPPORTED`
   2) Charge-bearer support
-     - Normalize requested `payment.chargeBearer` (OWN→OUR) and compare against `supportedCharges`
+    - Normalize requested `payment.chargeBearer` (OUR→OWN) and compare against `supportedCharges`
      - If supported → annotate GREEN route with `nostroIban` and echo `chargeBearer`
      - Else → move to RED with reason: `CAPABILITY:CHARGE_BEARER_UNSUPPORTED`
 - Keep existing RED routes intact. If a corresponding RED already exists, either coalesce descriptions or append a separate RED entry.
@@ -113,7 +113,7 @@ This phase formalizes three logical services (pipeline stages). They can run in-
   - Responsibilities: currency and charge-bearer capability checks per CorrBankBIC; enrich nostroIban; demotions with reasons
 
 Notes:
-- Charge-bearer normalization: inputs may include "OWN"; the system normalizes to "OUR" for comparison and output. Capability data MAY use OWN/OUR but will be normalized internally.
+- Charge-bearer normalization: inputs may include "OUR"; the system normalizes to "OWN" for comparison and output. Capability data MAY use OWN/OUR but will be normalized internally to OWN.
 - All responses SHOULD include versions for auditability: enrichmentVersion, rulesVersion, capabilitiesVersion.
 
 ---

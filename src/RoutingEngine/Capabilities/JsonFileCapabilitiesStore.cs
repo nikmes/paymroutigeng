@@ -85,8 +85,8 @@ public sealed class JsonFileCapabilitiesStore : ICapabilitiesStore
         {
             "BEN" => "BEN",
             "SHA" => "SHA",
-            "OWN" => "OUR",
-            "OUR" => "OUR",
+            "OUR" => "OWN",
+            "OWN" => "OWN",
             _ => null
         };
     }

@@ -64,7 +64,7 @@ public class RuleStoreHostSpec
                 PaymentCurrency = "EUR"
             });
 
-        var request = RoutingRequestFactory.Create(direction: "OUT", currency: "EUR");
+    var request = RoutingRequestFactory.Create(direction: "OUT", currency: "EUR", chargeBearer: "SHA");
 
         // Build engine host with in-memory rule store and a fake capabilities store
         var loader = new JsonRuleCatalogLoader();
@@ -89,6 +89,49 @@ public class RuleStoreHostSpec
 
         var green = Assert.Single(result.GreenRoutes);
         Assert.Contains("Nostro:", green.Description);
+    }
+
+    [Fact]
+    public async Task Post_processor_demotes_when_charge_bearer_unsupported()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-OUT-GR-EUR",
+                RuleDescription = "Send outbound EUR payments to Greece via Deutsche Bank",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 100,
+                CorrBankBic = "DEUTDEFFXXX",
+                PaymentDirection = "OUT",
+                PaymentCurrency = "EUR"
+            });
+
+        var request = RoutingRequestFactory.Create(direction: "OUT", currency: "EUR", chargeBearer: "BEN");
+
+        var loader = new JsonRuleCatalogLoader();
+        await using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(catalog));
+        var rules = await loader.LoadAsync(stream, CancellationToken.None);
+        var snapshot = new RoutingEngine.Rules.RuleCatalogSnapshot(1, DateTimeOffset.UtcNow, rules);
+        var ruleStore = new InMemoryRuleStoreStub(snapshot);
+
+        // Capabilities do NOT include BEN for EUR
+        var caps = new Dictionary<string, IReadOnlyDictionary<string, CurrencyCapability>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["DEUTDEFFXXX"] = new Dictionary<string, CurrencyCapability>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["EUR"] = new CurrencyCapability("DE12123456789012345678", new HashSet<string>(StringComparer.OrdinalIgnoreCase){"SHA","OWN"})
+            }
+        };
+        var capSnapshot = new CorridorCapabilitiesSnapshot(1, DateTimeOffset.UtcNow, caps);
+        var capStore = new CapabilitiesStoreStub(capSnapshot);
+
+        var host = new RoutingEngineHost(ruleStore, capStore, new[] { new CapabilityPostProcessor() });
+        var context = RoutingEngineTestHarness.GetContext(request);
+        var result = await host.EvaluateAsync(context);
+
+        Assert.Empty(result.GreenRoutes);
+        Assert.Contains(result.RedRoutes, r => r.RuleCode == "CAPABILITY:CHARGE_BEARER_UNSUPPORTED");
     }
 
     private sealed class InMemoryRuleStoreStub : RoutingEngine.Rules.IRuleStore

@@ -15,7 +15,7 @@ public sealed class CapabilityPostProcessor : IRoutePostProcessor
         }
 
     var currency = (request.Payment?.Currency ?? string.Empty).Trim().ToUpperInvariant();
-    // NOTE: PaymentContext currently lacks charge-bearer; enforcement will be handled at API layer or after domain extension.
+    var charge = NormalizeChargeBearer(request.Payment?.ChargeBearer);
 
         var newGreen = new List<RouteOutcome>(decision.GreenRoutes.Count);
         var newRed = new List<RouteOutcome>(decision.RedRoutes);
@@ -34,8 +34,12 @@ public sealed class CapabilityPostProcessor : IRoutePostProcessor
                 continue;
             }
 
-            // Charge-bearer support: if not provided by request, assume supported; otherwise verify
-            // Since domain PaymentContext has no charge-bearer, we skip enforcement here and only enrich nostroIban.
+            // Charge-bearer support: if provided by request, enforce
+            if (charge is not null && cap.SupportedCharges is not null && !cap.SupportedCharges.Contains(charge))
+            {
+                newRed.Add(new RouteOutcome("CAPABILITY:CHARGE_BEARER_UNSUPPORTED", route.CorrBankBic, $"{route.CorrBankBic} does not support charge bearer {charge} for {currency}"));
+                continue;
+            }
 
             // Enrich GREEN with nostroIban by extending Description (non-breaking). For full shape, API layer will project to output contract.
             var enrichedDescription = string.IsNullOrEmpty(route.Description)
@@ -60,8 +64,8 @@ public sealed class CapabilityPostProcessor : IRoutePostProcessor
         {
             "BEN" => "BEN",
             "SHA" => "SHA",
-            "OWN" => "OUR",
-            "OUR" => "OUR",
+            "OUR" => "OWN",
+            "OWN" => "OWN",
             _ => null
         };
     }

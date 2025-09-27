@@ -18,7 +18,7 @@
 - Rule/Capability duplication: Keep capabilities out of rules; validate post-eval
 - Performance overhead: Cache snapshot, O(1) BIC lookup (dictionary), measure delta
 - Data drift: Version snapshots; optional FileSystemWatcher later
-- Ambiguity in charge-bearer terms: Normalize OWN→OUR, constrain to [BEN,SHA,OUR]
+- Ambiguity in charge-bearer terms: Normalize constrain to [BEN,SHA,OWN]
 
 ## Deliverables
 - docs: spec.md, plan.md, tasks.md, quickstart.md, contracts/openapi.yaml (delta)

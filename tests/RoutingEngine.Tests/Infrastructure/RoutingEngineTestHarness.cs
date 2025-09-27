@@ -37,7 +37,8 @@ internal static class RoutingEngineTestHarness
         var paymentDirection = ParseEnum<PaymentDirection>(request.Payment.Direction);
         var customerType = ParseEnum<CustomerType>(request.Customer.Type);
 
-        var payment = new PaymentContext(paymentDirection, request.Payment.Currency);
+    var charge = ChargeBearerNormalization.Normalize(request.Payment.ChargeBearer);
+    var payment = new PaymentContext(paymentDirection, request.Payment.Currency, charge);
         var counterpartyType = ParseEnum<CounterpartyType>(request.Counterparty.Type);
         var counterparty = new CounterpartyContext(
             request.Counterparty.BankCountryCode,
@@ -263,8 +264,25 @@ public sealed record RoutingRequestDto(
     CounterpartyDto Counterparty,
     CustomerDto Customer);
 
-public sealed record PaymentDto(string Direction, string Currency);
+public sealed record PaymentDto(string Direction, string Currency, string? ChargeBearer = null);
 
 public sealed record CounterpartyDto(string? BankCountryCode, string? BankBic, string? Account, string? Name, string? Type);
 
 public sealed record CustomerDto(string? Id, string? Industry, string? Type, string? Account);
+
+internal static class ChargeBearerNormalization
+{
+    public static string? Normalize(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var v = value.Trim().ToUpperInvariant();
+        return v switch
+        {
+            "BEN" => "BEN",
+            "SHA" => "SHA",
+            "OUR" => "OWN", // normalize OUR->OWN as per product preference
+            "OWN" => "OWN",
+            _ => null
+        };
+    }
+}
