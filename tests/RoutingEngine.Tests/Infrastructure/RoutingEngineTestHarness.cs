@@ -54,6 +54,9 @@ internal static class RoutingEngineTestHarness
         return new RoutingContext(payment, counterparty, customer);
     }
 
+    // Expose for host tests
+    public static RoutingContext GetContext(RoutingRequestDto request) => MapRequest(request);
+
     private static RoutingTestResult MapResult(RoutingEvaluationResult evaluation)
     {
         var greenRoutes = evaluation.GreenRoutes

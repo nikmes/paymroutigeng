@@ -2,6 +2,10 @@ using RoutingEngine.Domain;
 using RoutingEngine.Evaluation;
 using RoutingEngine.Rules;
 using Xunit;
+using RoutingEngine.Tests.Infrastructure;
+using RoutingEngine.Capabilities;
+using System.Collections.Generic;
+using RoutingEngine.Configuration;
 
 namespace RoutingEngine.Tests;
 
@@ -42,5 +46,62 @@ public class RuleStoreHostSpec
 
         var res2 = await host.EvaluateAsync(ctx);
         Assert.Equal("R2", Assert.Single(res2.GreenRoutes).RuleCode);
+    }
+
+    [Fact]
+    public async Task Post_processor_enriches_green_route_with_nostro_when_supported()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-OUT-GR-EUR",
+                RuleDescription = "Send outbound EUR payments to Greece via Deutsche Bank",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 100,
+                CorrBankBic = "DEUTDEFFXXX",
+                PaymentDirection = "OUT",
+                PaymentCurrency = "EUR"
+            });
+
+        var request = RoutingRequestFactory.Create(direction: "OUT", currency: "EUR");
+
+        // Build engine host with in-memory rule store and a fake capabilities store
+        var loader = new JsonRuleCatalogLoader();
+        await using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(catalog));
+        var rules = await loader.LoadAsync(stream, CancellationToken.None);
+        var snapshot = new RoutingEngine.Rules.RuleCatalogSnapshot(1, DateTimeOffset.UtcNow, rules);
+        var ruleStore = new InMemoryRuleStoreStub(snapshot);
+
+        var caps = new Dictionary<string, IReadOnlyDictionary<string, CurrencyCapability>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["DEUTDEFFXXX"] = new Dictionary<string, CurrencyCapability>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["EUR"] = new CurrencyCapability("DE12123456789012345678", new HashSet<string>(StringComparer.OrdinalIgnoreCase){"BEN","SHA","OUR"})
+            }
+        };
+        var capSnapshot = new CorridorCapabilitiesSnapshot(1, DateTimeOffset.UtcNow, caps);
+        var capStore = new CapabilitiesStoreStub(capSnapshot);
+
+        var host = new RoutingEngineHost(ruleStore, capStore, new[] { new CapabilityPostProcessor() });
+        var context = RoutingEngineTestHarness.GetContext(request);
+        var result = await host.EvaluateAsync(context);
+
+        var green = Assert.Single(result.GreenRoutes);
+        Assert.Contains("Nostro:", green.Description);
+    }
+
+    private sealed class InMemoryRuleStoreStub : RoutingEngine.Rules.IRuleStore
+    {
+        private readonly RoutingEngine.Rules.RuleCatalogSnapshot _snapshot;
+        public InMemoryRuleStoreStub(RoutingEngine.Rules.RuleCatalogSnapshot snapshot) => _snapshot = snapshot;
+        public Task<RoutingEngine.Rules.RuleCatalogSnapshot> GetSnapshotAsync(CancellationToken ct = default) => Task.FromResult(_snapshot);
+    }
+
+    private sealed class CapabilitiesStoreStub : ICapabilitiesStore
+    {
+        private readonly CorridorCapabilitiesSnapshot _snapshot;
+        public CapabilitiesStoreStub(CorridorCapabilitiesSnapshot snapshot) => _snapshot = snapshot;
+        public Task<CorridorCapabilitiesSnapshot> GetSnapshotAsync(CancellationToken ct = default) => Task.FromResult(_snapshot);
     }
 }
