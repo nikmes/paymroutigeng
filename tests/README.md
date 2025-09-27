@@ -50,6 +50,7 @@ Verify-based snapshot scenarios that validate serialized responses.
 - **Mixed_green_and_red_routes_are_verified** – Captures a mixed outcome containing both pass and fail corridors along with the full audit.
 - **No_matching_rules_are_verified** – Documents the engine response when nothing matches; the empty result stays consistent over time.
 - **Empty_catalog_response_is_verified** – Locks in the serialized shape when the catalog has zero rules, ensuring the engine emits the bare minimum response (`CAN_NOT_ROUTE` / `NO_MATCH`).
+- **Customer_specific_block_snapshot_is_verified** – Covers a customer-specific block that suppresses `PASSBIC001` while leaving an alternate corridor (`TFIMCY2NXXX`) green, producing a mixed response snapshot.
 
 ### `LibraryContractTests`
 

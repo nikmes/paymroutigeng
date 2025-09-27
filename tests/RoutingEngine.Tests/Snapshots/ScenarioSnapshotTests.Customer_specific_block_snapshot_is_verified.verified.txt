@@ -1,0 +1,35 @@
+﻿{
+  Decision: CAN_ROUTE,
+  GreenRoutes: [
+    {
+      RuleCode: RULE-GREEN-ALT,
+      CorrBankBic: TFIMCY2NXXX,
+      Description: Alternative corridor
+    }
+  ],
+  RedRoutes: [
+    {
+      RuleCode: RULE-RED-CUSTOMER,
+      CorrBankBic: PASSBIC001,
+      Description: Block customer 10001 For Outgoing on PASSBIC001
+    }
+  ],
+  AuditTrail: [
+    {
+      RuleCode: RULE-RED-CUSTOMER,
+      Match: true,
+      OutcomePolicy: FailOnMatch
+    },
+    {
+      RuleCode: RULE-GREEN-GENERAL,
+      Match: true,
+      OutcomePolicy: PassOnMatch
+    },
+    {
+      RuleCode: RULE-GREEN-ALT,
+      Match: true,
+      OutcomePolicy: PassOnMatch
+    }
+  ],
+  Status: EVALUATED
+}

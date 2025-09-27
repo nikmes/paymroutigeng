@@ -187,6 +187,62 @@ public sealed class RuleEvaluationSpec
     }
 
     [Fact]
+    public async Task Customer_specific_block_moves_corridor_to_red_list()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-GREEN-GENERAL",
+                RuleDescription = "General pass-through corridor",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 200,
+                CorrBankBic = "PASSBIC001",
+                PaymentDirection = "OUT",
+                PaymentCurrency = "EUR"
+            },
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-RED-CUSTOMER",
+                RuleDescription = "Block customer 10001",
+                OutcomePolicy = "FailOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 300,
+                CorrBankBic = "PASSBIC001",
+                PaymentDirection = "OUT",
+                CustomerId = "10001"
+            },
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-GREEN-ALT",
+                RuleDescription = "Alternative corridor",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 150,
+                CorrBankBic = "TFIMCY2NXXX",
+                PaymentDirection = "OUT",
+                PaymentCurrency = "EUR"
+            });
+
+        var request = RoutingRequestFactory.Create(
+            direction: "OUT",
+            currency: "EUR",
+            customer: c => c.WithId("10001"));
+
+        var result = await RoutingEngineTestHarness.EvaluateAsync(catalog, request);
+
+        Assert.Equal("CAN_ROUTE", result.Decision);
+
+        var green = Assert.Single(result.GreenRoutes);
+        Assert.Equal("RULE-GREEN-ALT", green.RuleCode);
+        Assert.Equal("TFIMCY2NXXX", green.CorrBankBic);
+
+        var red = Assert.Single(result.RedRoutes);
+        Assert.Equal("RULE-RED-CUSTOMER", red.RuleCode);
+        Assert.Equal("PASSBIC001", red.CorrBankBic);
+    }
+
+    [Fact]
     public async Task All_green_corridors_are_returned_when_every_rule_passes()
     {
         var catalog = RuleCatalogBuilder.BuildJson(
