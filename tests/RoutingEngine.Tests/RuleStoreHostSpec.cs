@@ -134,6 +134,49 @@ public class RuleStoreHostSpec
         Assert.Contains(result.RedRoutes, r => r.RuleCode == "CAPABILITY:CHARGE_BEARER_UNSUPPORTED");
     }
 
+    [Fact]
+    public async Task Post_processor_demotes_when_currency_unsupported()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-OUT-GR-EUR",
+                RuleDescription = "Send outbound EUR payments to Greece via Deutsche Bank",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 100,
+                CorrBankBic = "DEUTDEFFXXX",
+                PaymentDirection = "OUT",
+                PaymentCurrency = "EUR"
+            });
+
+        var request = RoutingRequestFactory.Create(direction: "OUT", currency: "EUR", chargeBearer: "SHA");
+
+        var loader = new JsonRuleCatalogLoader();
+        await using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(catalog));
+        var rules = await loader.LoadAsync(stream, CancellationToken.None);
+        var snapshot = new RoutingEngine.Rules.RuleCatalogSnapshot(1, DateTimeOffset.UtcNow, rules);
+        var ruleStore = new InMemoryRuleStoreStub(snapshot);
+
+        // Capabilities missing EUR entry for the BIC
+        var caps = new Dictionary<string, IReadOnlyDictionary<string, CurrencyCapability>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["DEUTDEFFXXX"] = new Dictionary<string, CurrencyCapability>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["USD"] = new CurrencyCapability("DE34987654321098765432", new HashSet<string>(StringComparer.OrdinalIgnoreCase){"SHA","OWN"})
+            }
+        };
+        var capSnapshot = new CorridorCapabilitiesSnapshot(1, DateTimeOffset.UtcNow, caps);
+        var capStore = new CapabilitiesStoreStub(capSnapshot);
+
+        var host = new RoutingEngineHost(ruleStore, capStore, new[] { new CapabilityPostProcessor() });
+        var context = RoutingEngineTestHarness.GetContext(request);
+        var result = await host.EvaluateAsync(context);
+
+        Assert.Empty(result.GreenRoutes);
+        Assert.Contains(result.RedRoutes, r => r.RuleCode == "CAPABILITY:CURRENCY_UNSUPPORTED");
+    }
+
     private sealed class InMemoryRuleStoreStub : RoutingEngine.Rules.IRuleStore
     {
         private readonly RoutingEngine.Rules.RuleCatalogSnapshot _snapshot;
