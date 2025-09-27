@@ -51,7 +51,7 @@ Example (config/capabilities.sample.json):
      - If capabilities contain the route.corrBankBic AND a currency entry matching request.payment.currency → proceed
      - Else → move to RED with reason: `CAPABILITY:CURRENCY_UNSUPPORTED`
   2) Charge-bearer support
-    - Normalize requested `payment.chargeBearer` (OUR→OWN) and compare against `supportedCharges`
+  - Normalize requested `payment.chargeBearer` and compare against `supportedCharges` (allowed values: BEN, SHA, OWN)
      - If supported → annotate GREEN route with `nostroIban` and echo `chargeBearer`
      - Else → move to RED with reason: `CAPABILITY:CHARGE_BEARER_UNSUPPORTED`
 - Keep existing RED routes intact. If a corresponding RED already exists, either coalesce descriptions or append a separate RED entry.
@@ -81,7 +81,7 @@ Example (config/capabilities.sample.json):
 - Unknown BIC in capabilities → treat as unsupported for the requested currency (demote to RED)
 - Multiple entries for the same BIC×currency → pick highest priority or first entry deterministically
 - Mixed case currency codes → normalize to uppercase
- - "OWN" input is accepted and normalized to "OUR" for comparison and output
+ - Charge-bearer domain is strictly [BEN, SHA, OWN]. Inputs are normalized to this set.
 
 ## Telemetry
 - Metrics: routes_demoted_unsupported_currency, routes_demoted_unsupported_charge_bearer, routes_enriched_with_nostro, capabilities_snapshot_version
@@ -113,7 +113,7 @@ This phase formalizes three logical services (pipeline stages). They can run in-
   - Responsibilities: currency and charge-bearer capability checks per CorrBankBIC; enrich nostroIban; demotions with reasons
 
 Notes:
-- Charge-bearer normalization: inputs may include "OUR"; the system normalizes to "OWN" for comparison and output. Capability data MAY use OWN/OUR but will be normalized internally to OWN.
+- Charge-bearer normalization: allowed values are strictly [BEN, SHA, OWN]. If legacy inputs contain "OUR", they are accepted and normalized to "OWN" internally; outputs use "OWN".
 - All responses SHOULD include versions for auditability: enrichmentVersion, rulesVersion, capabilitiesVersion.
 
 ---

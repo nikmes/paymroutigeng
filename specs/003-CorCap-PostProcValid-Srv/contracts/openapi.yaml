@@ -36,7 +36,7 @@ components:
                   type: string
                 chargeBearer:
                   type: string
-                  description: "BEN, SHA, OUR (OWN accepted and normalized to OUR)"
+                  description: "BEN, SHA, OWN"
             counterparty:
               type: object
               properties:

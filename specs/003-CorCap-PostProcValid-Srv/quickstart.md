@@ -276,7 +276,7 @@ Response example
 ```
 
 Notes
-- Normalize charge-bearers: map OUR→OWN at input; present OWN in responses.
+- Charge-bearers: allowed values are [BEN, SHA, OWN]. If legacy inputs contain OUR, normalize to OWN; present OWN in responses.
 - UI can show only options found in `chargeBearersAny` to avoid dead ends; for stricter UX, use `chargeBearersCommon` until country/currency is chosen.
 - Cache the response per (customerId, preferredDirection) and invalidate when `rulesVersion` or `capabilitiesVersion` changes.
 

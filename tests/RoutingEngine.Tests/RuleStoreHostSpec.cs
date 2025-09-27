@@ -77,7 +77,7 @@ public class RuleStoreHostSpec
         {
             ["DEUTDEFFXXX"] = new Dictionary<string, CurrencyCapability>(StringComparer.OrdinalIgnoreCase)
             {
-                ["EUR"] = new CurrencyCapability("DE12123456789012345678", new HashSet<string>(StringComparer.OrdinalIgnoreCase){"BEN","SHA","OUR"})
+                ["EUR"] = new CurrencyCapability("DE12123456789012345678", new HashSet<string>(StringComparer.OrdinalIgnoreCase){"BEN","SHA","OWN"})
             }
         };
         var capSnapshot = new CorridorCapabilitiesSnapshot(1, DateTimeOffset.UtcNow, caps);

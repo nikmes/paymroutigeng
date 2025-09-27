@@ -13,5 +13,5 @@ public sealed record CorridorCapabilitiesSnapshot(
 
 public sealed record CurrencyCapability(
     string NostroIban,
-    IReadOnlySet<string> SupportedCharges // e.g., BEN, SHA, OUR
+    IReadOnlySet<string> SupportedCharges // e.g., BEN, SHA, OWN
 );
