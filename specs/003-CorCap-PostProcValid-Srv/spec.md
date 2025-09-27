@@ -8,7 +8,7 @@ Pipeline after this phase:
 2) Rule Evaluation → provisional GREEN/RED
 3) Post-Processing Validation → capability checks per CorrBankBIC:
   - Currency support (required)
-  - Charge-bearer support (required): BEN, SHA, OUR (alias OWN → OUR)
+  - Charge-bearer support (required): BEN, SHA, OWN 
   - Enrich supported routes with Nostro IBAN for the requested currency
   - Demote any unsupported routes to RED with a clear reason
 4) Response shaping
@@ -26,7 +26,7 @@ We externalize correspondent capabilities as bank master data, not rules.
   - currencies: array of objects:
     - code: string (ISO 4217 alpha-3)
     - nostroIban: string (IBAN)
-    - supportedCharges?: array of strings, subset of ["BEN","SHA","OUR"] (OWN is accepted as alias of OUR and normalized)
+    - supportedCharges?: array of strings, subset of ["BEN","SHA","OWN"] 
     - priority?: integer (optional, future-proofing)
 
 - Representation: JSON file for Phase 1.3, pluggable store later.
@@ -36,8 +36,8 @@ Example (config/capabilities.sample.json):
 {
   "correspondents": [
     { "bic": "DEUTDEFFXXX", "currencies": [
-      { "code": "EUR", "nostroIban": "DE12123456789012345678", "supportedCharges": ["BEN","SHA","OUR"] },
-      { "code": "USD", "nostroIban": "DE34987654321098765432", "supportedCharges": ["SHA","OUR"] }
+      { "code": "EUR", "nostroIban": "DE12123456789012345678", "supportedCharges": ["BEN","SHA","OWN"] },
+      { "code": "USD", "nostroIban": "DE34987654321098765432", "supportedCharges": ["SHA","OWN"] }
     ]},
     { "bic": "CHASUS33XXX", "currencies": [
       { "code": "USD", "nostroIban": "GB12CHAS12345678901234", "supportedCharges": ["BEN","SHA"] }
@@ -93,4 +93,52 @@ Example (config/capabilities.sample.json):
 ## Compatibility
 - Rule catalog unchanged; capabilities are orthogonal.
 - Response shape is backward compatible (nostroIban is additive; GREEN list only gets stricter).
+
+## Service Boundaries
+This phase formalizes three logical services (pipeline stages). They can run in-process or be split later:
+
+- PaymentRequestEnrichment
+  - Input: raw ruleContext
+  - Output: enriched ruleContext (+ enrichmentVersion)
+  - Responsibilities: normalization, derived fields (e.g., counterparty.type), low-cost lookups
+
+- RuleEvaluation
+  - Input: enriched ruleContext
+  - Output: provisional decision (GREEN/RED lists) (+ rulesVersion)
+  - Responsibilities: pure evaluation over a versioned rule snapshot; deterministic ordering
+
+- PostProcessingValidation
+  - Input: request + provisional decision
+  - Output: final decision (+ capabilitiesVersion)
+  - Responsibilities: currency and charge-bearer capability checks per CorrBankBIC; enrich nostroIban; demotions with reasons
+
+Notes:
+- Charge-bearer normalization: inputs may include "OWN"; the system normalizes to "OUR" for comparison and output. Capability data MAY use OWN/OUR but will be normalized internally.
+- All responses SHOULD include versions for auditability: enrichmentVersion, rulesVersion, capabilitiesVersion.
+
+---
+
+### Appendix A — Split Deployment Option
+
+When operational needs require independent scaling or ownership boundaries, the three logical services may be deployed separately.
+
+- EnrichmentService
+  - POST /enrich
+  - Body: { ruleContext: { …raw… } }
+  - Returns: { ruleContext: { …enriched… }, enrichmentVersion, correlationId }
+
+- EvaluationService
+  - POST /evaluate
+  - Body: { ruleContext: { …enriched… }, correlationId }
+  - Returns: { status, decision, greenRoutes[], redRoutes[], rulesVersion, correlationId }
+
+- ValidationService
+  - POST /validate
+  - Body: { request: { ruleContext }, decision: { …from evaluate… }, correlationId }
+  - Returns: { …final decision… (nostroIban, demotions) …, capabilitiesVersion, correlationId }
+
+Considerations:
+- Latency and reliability impact due to network hops; add retries and circuit breakers.
+- Version drift across services; include explicit version fields in responses and logs.
+- Shared correlationId passed end-to-end for tracing.
 
