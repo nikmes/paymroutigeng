@@ -1,0 +1,146 @@
+openapi: 3.1.0
+info:
+  title: Payment Routing Engine
+  version: 0.1.0
+  description: |
+    HTTP contract for evaluating routing rules and returning GREEN/RED route options.
+servers:
+  - url: https://api.example.com
+paths:
+  /payment-routing/resolve:
+    post:
+      summary: Evaluate routing rules for a payment request
+      operationId: resolveRoutes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutingRequest'
+      responses:
+        '200':
+          description: Successful evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingEvaluationResponse'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    RoutingRequest:
+      type: object
+      required:
+        - ruleContext
+      properties:
+        ruleContext:
+          $ref: '#/components/schemas/RuleContext'
+    RuleContext:
+      type: object
+      required:
+        - payment
+        - counterparty
+        - customer
+      properties:
+        payment:
+          $ref: '#/components/schemas/PaymentContext'
+        counterparty:
+          $ref: '#/components/schemas/CounterpartyContext'
+        customer:
+          $ref: '#/components/schemas/CustomerContext'
+    PaymentContext:
+      type: object
+      required:
+        - direction
+        - currency
+      properties:
+        direction:
+          type: string
+          enum: [IN, OUT, INT, OWN]
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+    CounterpartyContext:
+      type: object
+      properties:
+        bankCountryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+        bankBic:
+          type: string
+          pattern: '^[A-Z0-9]{8,11}$'
+        account:
+          type: string
+          maxLength: 34
+        name:
+          type: string
+          maxLength: 140
+    CustomerContext:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 64
+        industry:
+          type: string
+        type:
+          type: string
+          enum: [INDIVIDUAL, CORPORATE]
+    RoutingEvaluationResponse:
+      type: object
+      required:
+        - status
+        - decision
+        - greenRoutes
+        - redRoutes
+      properties:
+        status:
+          type: string
+          enum: [EVALUATED, NO_MATCH]
+        decision:
+          type: string
+          enum: [CAN_ROUTE, CAN_NOT_ROUTE]
+        greenRoutes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteOutcome'
+        redRoutes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteOutcome'
+    RouteOutcome:
+      type: object
+      required:
+        - ruleCode
+        - corrBankBic
+        - description
+      properties:
+        ruleCode:
+          type: string
+          maxLength: 64
+        corrBankBic:
+          type: string
+          pattern: '^[A-Z0-9]{11}$'
+        description:
+          type: string
+          maxLength: 256
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - details
+      properties:
+        error:
+          type: string
+        details:
+          type: string

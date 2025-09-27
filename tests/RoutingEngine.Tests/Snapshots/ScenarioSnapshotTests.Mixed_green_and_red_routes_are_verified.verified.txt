@@ -1,0 +1,35 @@
+﻿{
+  Decision: CAN_ROUTE,
+  GreenRoutes: [
+    {
+      RuleCode: RULE-GREEN-SECONDARY,
+      CorrBankBic: CHASUS33XXX,
+      Description: Secondary routing corridor
+    }
+  ],
+  RedRoutes: [
+    {
+      RuleCode: RULE-RED-BLOCK,
+      CorrBankBic: DEUTDEFFXXX,
+      Description: Block corridor for sanctioned entity
+    }
+  ],
+  AuditTrail: [
+    {
+      RuleCode: RULE-RED-BLOCK,
+      Match: true,
+      OutcomePolicy: FailOnMatch
+    },
+    {
+      RuleCode: RULE-GREEN-PRIMARY,
+      Match: true,
+      OutcomePolicy: PassOnMatch
+    },
+    {
+      RuleCode: RULE-GREEN-SECONDARY,
+      Match: true,
+      OutcomePolicy: PassOnMatch
+    }
+  ],
+  Status: EVALUATED
+}

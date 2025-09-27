@@ -1,0 +1,34 @@
+[
+  {
+    "RuleCodeName": "RULE-SEPA-OUT-EUR",
+    "RuleDescription": "Route outbound SEPA EUR payments via CorrRoute EU01.",
+    "OutcomePolicy": "PassOnMatch",
+    "Operator": "ALL",
+    "PriorityWeight": 500,
+    "CorrBankBic": "EUROEU22XXX",
+    "RuleStatus": "ON",
+    "PR.PaymentDirection": "OUT",
+    "PR.PaymentCurrency": "EUR",
+    "PR.CustomerType": "CORPORATE"
+  },
+  {
+    "RuleCodeName": "RULE-BLOCK-HI-RISK",
+    "RuleDescription": "Block payments towards sanctioned counterparties in the United States.",
+    "OutcomePolicy": "FailOnMatch",
+    "Operator": "ANY",
+    "PriorityWeight": 1000,
+    "CorrBankBic": "BLOCKUS33XXX",
+    "RuleStatus": "ON",
+    "PR.CPartyBankCountryCode": "US",
+    "PR.CPartyName": "ACME OFFSHORE"
+  },
+  {
+    "RuleCodeName": "RULE-FALLBACK-DEFAULT",
+    "RuleDescription": "Default corridor for unmatched outbound payments.",
+    "OutcomePolicy": "PassOnMatch",
+    "Operator": "ANY",
+    "PriorityWeight": 10,
+    "CorrBankBic": "DEFAULT99XXX",
+    "RuleStatus": "ON"
+  }
+]

@@ -4,7 +4,11 @@
 **Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
 
 ## Execution Flow (main)
-```
+ 
+---
+*Based on Constitution v1.0.0 - See `.specify/memory/constitution.md`*
+
+````
 1. Load plan.md from feature directory
    → If not found: ERROR "No implementation plan found"
    → Extract: tech stack, libraries, structure

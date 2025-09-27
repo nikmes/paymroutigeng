@@ -1,8 +1,8 @@
 
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Payment Routing Rules Engine (Phase 1)
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `002-payment-routing` | **Date**: 2025-09-26 | **Spec**: [`spec.md`](./spec.md)
+**Input**: Feature specification from `/specs/002-payment-routing/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -31,23 +31,32 @@
 - Phase 3-4: Implementation execution (manual or via tools)
 
 ## Summary
-[Extract from feature spec: primary requirement + technical approach from research]
+Implement the first delivery phase of the payment routing rules engine as a .NET 9 class library that evaluates routing rules loaded from JSON, producing GREEN and RED route lists plus a `CAN_ROUTE` / `CAN_NOT_ROUTE` decision. Phase 1 focuses on validating the engine’s rule evaluation logic, logging via Serilog (console sink), comprehensive test coverage with xUnit (including property-based checks), and benchmarking hot paths with BenchmarkDotNet to confirm <10 ms per evaluation.
 
 ## Technical Context
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: C# / .NET 9 (class library)  
+**Primary Dependencies**: Serilog (console sink), BenchmarkDotNet, System.Text.Json  
+**Storage**: JSON rule catalog file (Phase 1 in-memory load)  
+**Testing**: xUnit (+ FsCheck for property-based tests), Verify for golden snapshots  
+**Target Platform**: Cross-platform .NET runtime (Windows/Linux build agents)  
+**Project Type**: Single back-end engine library (Option 1 structure)  
+**Performance Goals**: <10 ms latency per rule evaluation in BenchmarkDotNet harness  
+**Constraints**: Deterministic evaluation, numeric priority weights, logging errors/warnings only via Serilog console sink  
+**Scale/Scope**: Initial validation with catalogs up to 1,000 rules; no HTTP/API surface yet
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- **Principle I – Test & Contract First**: Plan emphasizes xUnit and property-based tests preceding implementation; golden fixtures derived from spec satisfy the mandate. ✅
+- **Principle II – Clean Endpoints**: No HTTP endpoints in Phase 1 (library only), so separation of concerns is maintained. ✅
+- **Principle III – Simplicity & Observability**: Serilog console sink with minimal logging matches the “errors-only baseline”. ✅
+- **Principle IV – Data Integrity**: Numeric priority weights, deterministic evaluation, and auditing outputs align with deterministic requirements. ✅
+- **Principle V – Traceability**: Spec includes Clarifications; plan + forthcoming research/tasks maintain traceability chain. ✅
+
+**Result (Initial Check)**: No constitutional violations identified.
+
+### Post-Design Constitution Check
+- New artifacts (research, data model, library contract, quickstart) maintain the same constraints; still no violations. ✅
 
 ## Project Structure
 
@@ -99,7 +108,7 @@ ios/ or android/
 └── [platform-specific structure]
 ```
 
-**Structure Decision**: [DEFAULT to Option 1 unless Technical Context indicates web/mobile app]
+**Structure Decision**: Option 1 (single project) – `src/` for engine library, `tests/` for unit/property/benchmark harnesses.
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -120,7 +129,7 @@ ios/ or android/
    - Rationale: [why chosen]
    - Alternatives considered: [what else evaluated]
 
-**Output**: research.md with all NEEDS CLARIFICATION resolved
+**Output**: research.md with all NEEDS CLARIFICATION resolved (Phase 1 clarifications already captured; document supporting details)
 
 ## Phase 1: Design & Contracts
 *Prerequisites: research.md complete*
@@ -145,13 +154,12 @@ ios/ or android/
    - Quickstart test = story validation steps
 
 5. **Update agent file incrementally** (O(1) operation):
-   - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
-     **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
-   - If exists: Add only NEW tech from current plan
-   - Preserve manual additions between markers
-   - Update recent changes (keep last 3)
-   - Keep under 150 lines for token efficiency
-   - Output to repository root
+    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
+       **IMPORTANT**: Execute it exactly as specified above. Do not add or remove any arguments.
+    - Record adoption of .NET 9, Serilog console sink, BenchmarkDotNet, FsCheck, JSON rule catalogs
+    - Preserve manual additions between markers, keep last 3 recent changes
+    - Keep file under 150 lines for token efficiency
+    - Output to repository root
 
 **Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
 
@@ -160,18 +168,19 @@ ios/ or android/
 
 **Task Generation Strategy**:
 - Load `.specify/templates/tasks-template.md` as base
-- Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each contract → contract test task [P]
-- Each entity → model creation task [P] 
-- Each user story → integration test task
-- Implementation tasks to make tests pass
+- Derive tasks from Phase 1 artifacts (research.md, data-model.md, quickstart.md)
+- Each contract/interface → contract test & validation task [P]
+- Each entity/config → model mapping & parser task [P]
+- Benchmark harness → performance test task
+- Logging & configuration requirements → infrastructure wiring tasks
+- Implementation tasks allocated after tests (TDD compliance)
 
 **Ordering Strategy**:
-- TDD order: Tests before implementation 
-- Dependency order: Models before services before UI
-- Mark [P] for parallel execution (independent files)
+- TDD sequencing: contract/property tests → rule evaluation engine → benchmarking harness → logging/config wiring
+- Dependency order: Domain models & parser before evaluator, evaluator before bench/test harness, instrumentation last
+- Mark independent tasks (e.g., benchmark harness vs. config loader) with [P] for parallel execution
 
-**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
+**Estimated Output**: ~20-24 ordered tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
@@ -194,18 +203,16 @@ ios/ or android/
 ## Progress Tracking
 *This checklist is updated during execution flow*
 
-**Phase Status**:
-- [ ] Phase 0: Research complete (/plan command)
-- [ ] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
 - [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
-**Gate Status**:
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
 
 *Based on Constitution v1.0.0 - See `.specify/memory/constitution.md`*

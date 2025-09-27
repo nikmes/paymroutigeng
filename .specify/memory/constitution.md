@@ -1,50 +1,99 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: 0.0.0 → 1.0.0
+- Modified principles: N/A (initial adoption)
+- Added sections: Core Principles (5), Additional Constraints, Development Workflow & Quality Gates
+- Removed sections: None
+- Templates requiring updates:
+	- .specify/templates/plan-template.md → ✅ updated (footer path/version)
+	- .specify/templates/tasks-template.md → ✅ updated (footer path/version)
+	- .specify/templates/spec-template.md → ✅ no change needed
+	- specs/001-corresponding-bank-routing/plan.md → ✅ updated (footer path/version)
+- Follow-up TODOs: None
+-->
+
+# corrroute Project Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Test- and Contract-First (NON-NEGOTIABLE)
+All externally visible behavior MUST be defined by executable tests and contracts before
+implementation. Write contract tests from OpenAPI first; ensure they fail; then implement
+to pass. Follow Red-Green-Refactor with small commits.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Rationale: Contracts and tests anchor behavior, reduce regressions, and accelerate safe change.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Clean Endpoints & Separation of Concerns
+Expose HTTP endpoints via Minimal APIs with each endpoint in its own file. `Program.cs`
+MUST only contain composition/wiring. Handlers delegate to application services; no data
+access or business rules in endpoint files. Domain, Application, and Infrastructure layers
+are separated and unit-testable.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Rationale: Keeps I/O thin, promotes maintainability, and enables focused testing.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Simplicity First & Progressive Observability
+Prefer the simplest solution that satisfies current requirements (YAGNI). For Phase 1,
+logging is errors-only. More observability (structured logs, tracing, metrics) MAY be added
+in later phases behind clear acceptance criteria.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Rationale: Avoids premature complexity and noise while preserving room to evolve.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Data Integrity & Time-Windowed Rules
+Time-bounded entries use UTC and are effective when `now ∈ [EffectiveFrom, EffectiveTo]`.
+Evaluations MUST be deterministic and audited. Status precedence MUST be enforced as
+defined by the feature spec (e.g., UNAVAILABLE > BLOCKED > OPEN).
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Rationale: Ensures correctness, auditability, and reproducible decisions.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Traceability & Documentation
+Every feature includes a spec → plan → tasks chain. Decisions and clarifications are
+recorded close to the feature. Acceptance scenarios map to tests. Documentation is updated
+as a first-class deliverable.
+
+Rationale: Maintains transparency and reduces onboarding and maintenance costs.
+
+## Additional Constraints
+
+- Backend stack: .NET 9 (C#), ASP.NET Core Minimal APIs, PostgreSQL, EF Core.
+- Logging: Serilog with errors-only baseline in Phase 1.
+- API documentation: Swagger (Swashbuckle).
+- Caching: FusionCache for read-heavy endpoints where justified.
+- Testing: xUnit; contract tests for OpenAPI endpoints; unit tests for rules.
+- Security (Phase 1): Any authenticated internal user may manage/query the lists and routes.
+	Future RBAC will refine scopes.
+- Performance: Targets to be defined per feature; add BenchmarkDotNet harnesses for hot paths.
+- Code quality: `nullable enable`; warnings as errors where practical.
+
+## Development Workflow & Quality Gates
+
+1) Gates and Phases
+- Spec → Clarify → Plan (Phase 0 research, Phase 1 design/contracts) → Tasks → Implementation → Validation.
+
+2) Quality Gates (MUST PASS in CI)
+- Build and lint/typecheck pass.
+- Contract tests exist and pass for public endpoints.
+- Unit tests for core rules and precedence pass.
+- Constitution compliance acknowledged in PR description.
+
+3) Pull Requests
+- Small, focused PRs with clear scope and tests.
+- Conventional commit messages preferred.
+- Reviewers verify alignment with this constitution and the feature spec.
+
+4) Versioning
+- Public contracts and this constitution follow SemVer. 
+	- MAJOR: Backward-incompatible governance or contract changes
+	- MINOR: New principles/sections or materially expanded guidance
+	- PATCH: Clarifications and non-semantic refinements
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes prior ad-hoc practices. Amendments require a PR that:
+- Explains the change and its impact
+- Includes a migration/communication plan when needed
+- Bumps the constitution version per SemVer and updates dependent templates/docs
+- Is approved by maintainers
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Compliance is reviewed during PRs. Exceptions MUST be explicitly justified and time-boxed.
+
+**Version**: 1.0.0 | **Ratified**: 2025-09-24 | **Last Amended**: 2025-09-24

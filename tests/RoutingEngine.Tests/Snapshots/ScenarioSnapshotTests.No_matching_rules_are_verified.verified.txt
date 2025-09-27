@@ -1,0 +1,11 @@
+﻿{
+  Decision: CAN_NOT_ROUTE,
+  AuditTrail: [
+    {
+      RuleCode: RULE-NONMATCH,
+      Match: false,
+      OutcomePolicy: PassOnMatch
+    }
+  ],
+  Status: NO_MATCH
+}
