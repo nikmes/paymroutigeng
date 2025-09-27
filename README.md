@@ -1,4 +1,4 @@
-# corrroute – Payment Routing Rules Engine (Phase 1)
+# paymroutigeng – Payment Routing Rules Engine (Phase 1)
 
 This repository contains the Phase 1 implementation of the corrroute payment routing rules engine. The goal is to evaluate configurable routing rules, surface deterministic GREEN/RED corridors, and provide the verification, benchmarking, and documentation artifacts needed for future phases.
 
