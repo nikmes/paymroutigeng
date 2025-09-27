@@ -14,4 +14,5 @@
 - [ ] Q01: README/quickstart updates with capabilities and service wiring
 - [ ] R01: Optional hot-reload (FileSystemWatcher) with debounce
 - [ ] R02: Optional content-hash versioning for capabilities
+ - [ ] S01 (deferred): Minimal API service scaffolding — create ASP.NET Core minimal API, wire DI (IRuleStore, ICapabilitiesStore, IRoutePostProcessor, RoutingEngineHost), add endpoints (/payment-routing/resolve, /payment-routing/eligibility), configure appsettings paths, and add a small "Try it" section.
 
