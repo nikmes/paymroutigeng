@@ -38,11 +38,13 @@ internal static class RoutingEngineTestHarness
         var customerType = ParseEnum<CustomerType>(request.Customer.Type);
 
         var payment = new PaymentContext(paymentDirection, request.Payment.Currency);
+        var counterpartyType = ParseEnum<CounterpartyType>(request.Counterparty.Type);
         var counterparty = new CounterpartyContext(
             request.Counterparty.BankCountryCode,
             request.Counterparty.BankBic,
             request.Counterparty.Account,
-            request.Counterparty.Name);
+            request.Counterparty.Name,
+            counterpartyType);
         var customer = new CustomerContext(
             request.Customer.Id,
             request.Customer.Industry,
@@ -260,6 +262,6 @@ public sealed record RoutingRequestDto(
 
 public sealed record PaymentDto(string Direction, string Currency);
 
-public sealed record CounterpartyDto(string? BankCountryCode, string? BankBic, string? Account, string? Name);
+public sealed record CounterpartyDto(string? BankCountryCode, string? BankBic, string? Account, string? Name, string? Type);
 
 public sealed record CustomerDto(string? Id, string? Industry, string? Type, string? Account);

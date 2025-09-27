@@ -38,6 +38,9 @@ public sealed record RoutingRule
     /// <summary>Counterparty name condition.</summary>
     public string? CounterpartyName { get; init; }
 
+    /// <summary>Derived counterparty type condition.</summary>
+    public CounterpartyType? CounterpartyType { get; init; }
+
     /// <summary>Initiating customer identifier condition.</summary>
     public string? CustomerId { get; init; }
 

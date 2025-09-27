@@ -243,6 +243,34 @@ public sealed class RuleEvaluationSpec
     }
 
     [Fact]
+    public async Task Counterparty_type_predicate_routes_when_type_matches()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-CPTY-BUSINESS",
+                RuleDescription = "Route only for business counterparties",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 120,
+                CorrBankBic = "BNPAFRPPXXX",
+                CounterpartyType = "BUSINESS"
+            });
+
+        var request = RoutingRequestFactory.Create(
+            direction: "OUT",
+            currency: "EUR",
+            counterparty: c => c.WithType("BUSINESS"));
+
+        var result = await RoutingEngineTestHarness.EvaluateAsync(catalog, request);
+
+        Assert.Equal("CAN_ROUTE", result.Decision);
+        var route = Assert.Single(result.GreenRoutes);
+        Assert.Equal("RULE-CPTY-BUSINESS", route.RuleCode);
+        Assert.Equal("BNPAFRPPXXX", route.CorrBankBic);
+    }
+
+    [Fact]
     public async Task All_green_corridors_are_returned_when_every_rule_passes()
     {
         var catalog = RuleCatalogBuilder.BuildJson(

@@ -143,4 +143,41 @@ public sealed class ScenarioSnapshotTests
             .UseMethodName("Customer_specific_block_snapshot_is_verified")
             .UseDirectory("Snapshots");
     }
+
+    [Fact]
+    public async Task Counterparty_type_business_snapshot_is_verified()
+    {
+        var catalog = RuleCatalogBuilder.BuildJson(
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-BUSINESS-ONLY",
+                RuleDescription = "Route only when counterparty is classified as business.",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 400,
+                CorrBankBic = "BNPAFRPPXXX",
+                CounterpartyType = "BUSINESS"
+            },
+            new RuleDefinition
+            {
+                RuleCodeName = "RULE-GENERIC-USD",
+                RuleDescription = "Generic USD route",
+                OutcomePolicy = "PassOnMatch",
+                Operator = "ALL",
+                PriorityWeight = 100,
+                CorrBankBic = "CHASUS33XXX",
+                PaymentCurrency = "USD"
+            });
+
+        var request = RoutingRequestFactory.Create(
+            direction: "OUT",
+            currency: "EUR",
+            counterparty: c => c.WithType("BUSINESS"));
+
+        var result = await RoutingEngineTestHarness.EvaluateAsync(catalog, request);
+
+        await Verifier.Verify(result)
+            .UseMethodName("Counterparty_type_business_snapshot_is_verified")
+            .UseDirectory("Snapshots");
+    }
 }

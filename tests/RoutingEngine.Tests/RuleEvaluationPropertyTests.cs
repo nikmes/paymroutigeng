@@ -92,7 +92,8 @@ public sealed class RuleEvaluationPropertyTests
                 MaybeFrom(CountryPool),
                 MaybeFrom(BicPool),
                 Maybe($"ACCT-{_random.Next(10_000, 999_999)}"),
-                Maybe(PickFrom(new[] { "ACME LTD", "FOO BAR", "SANCTIONED ENTITY", "TRUSTED SUPPLIER" })));
+                Maybe(PickFrom(new[] { "ACME LTD", "FOO BAR", "SANCTIONED ENTITY", "TRUSTED SUPPLIER" })),
+                Maybe(PickFrom(new[] { "PERSON", "BUSINESS", "UNKNOWN" })));
 
             var customer = new CustomerDto(
                 Maybe($"CUST-{_random.Next(1, 999):000}"),

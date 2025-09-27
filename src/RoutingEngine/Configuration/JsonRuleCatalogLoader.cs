@@ -95,6 +95,7 @@ public sealed class JsonRuleCatalogLoader
             var ruleOperator = ParseRuleOperator(dto.Operator, prefix, errors);
             var ruleStatus = ParseRuleStatus(dto.RuleStatus, prefix, errors);
             var customerType = ParseCustomerType(dto.CustomerType, prefix, errors);
+            var counterpartyType = ParseCounterpartyType(dto.CounterpartyType, prefix, errors);
             var paymentDirection = ParsePaymentDirection(dto.PaymentDirection, prefix, errors);
 
             if (errors.Count > errorCheckpoint)
@@ -120,6 +121,7 @@ public sealed class JsonRuleCatalogLoader
                 CustomerId = NormalizeOptional(dto.CustomerId),
                 CustomerIndustry = NormalizeUpper(dto.CustomerIndustry),
                 CustomerType = customerType,
+                CounterpartyType = counterpartyType,
                 CustomerAccount = NormalizeOptional(dto.CustomerAccount),
                 PaymentDirection = paymentDirection,
                 PaymentCurrency = NormalizeUpper(dto.PaymentCurrency)
@@ -287,6 +289,9 @@ public sealed class JsonRuleCatalogLoader
         [JsonPropertyName("PR.CPartyName")]
         public string? CounterpartyName { get; init; }
 
+    [JsonPropertyName("PR.CPartyType")]
+    public string? CounterpartyType { get; init; }
+
         [JsonPropertyName("PR.CustomerId")]
         public string? CustomerId { get; init; }
 
@@ -304,5 +309,21 @@ public sealed class JsonRuleCatalogLoader
 
         [JsonPropertyName("PR.PaymentCurrency")]
         public string? PaymentCurrency { get; init; }
+    }
+
+    private static CounterpartyType? ParseCounterpartyType(string? value, string prefix, ICollection<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim().ToUpperInvariant() switch
+        {
+            "PERSON" => CounterpartyType.Person,
+            "BUSINESS" => CounterpartyType.Business,
+            "UNKNOWN" => CounterpartyType.Unknown,
+            _ => AddError<CounterpartyType?>(errors, prefix, "PR.CPartyType", value)
+        };
     }
 }

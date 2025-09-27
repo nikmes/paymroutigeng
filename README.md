@@ -35,6 +35,12 @@ The engine follows a rule-based design: a JSON catalog describing routing rules 
 
 This structure keeps the rule engine composable: hosts can feed different catalogs, enrich the `RoutingContext`, or extend predicate generation without altering the core evaluation flow.
 
+### Enrichment (Phase 1.1)
+- The engine now supports an optional derived attribute `counterparty.type` (enum PERSON | BUSINESS | UNKNOWN) exposed to rules via `PR.CPartyType`.
+- Recommended usage: run your classifier (e.g., name/entity model) in your host application and populate `CounterpartyContext.Type` before calling `RoutingEngine.Evaluate(...)`.
+- Why: keeps the evaluator deterministic and fast, and makes rules explicit about targeting enriched data.
+- Contract updates: OpenAPI request includes `counterparty.type`; rules may specify `PR.CPartyType`. Missing values behave as wildcards (no condition generated).
+
 ## Prerequisites
 - .NET 9 SDK (build 9.0.305 or later).
 - PowerShell 7+ (or Bash) to execute the documented commands.

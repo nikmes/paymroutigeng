@@ -7,4 +7,5 @@ namespace RoutingEngine.Domain;
 /// <param name="BankBic">Counterparty bank BIC.</param>
 /// <param name="Account">Counterparty account reference.</param>
 /// <param name="Name">Counterparty name, typically up to 140 characters.</param>
-public sealed record CounterpartyContext(string? BankCountryCode, string? BankBic, string? Account, string? Name);
+/// <param name="Type">Derived counterparty type (e.g., PERSON, BUSINESS, UNKNOWN).</param>
+public sealed record CounterpartyContext(string? BankCountryCode, string? BankBic, string? Account, string? Name, CounterpartyType? Type);

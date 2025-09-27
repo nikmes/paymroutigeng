@@ -1,0 +1,23 @@
+﻿{
+  Decision: CAN_ROUTE,
+  GreenRoutes: [
+    {
+      RuleCode: RULE-BUSINESS-ONLY,
+      CorrBankBic: BNPAFRPPXXX,
+      Description: Route only when counterparty is classified as business.
+    }
+  ],
+  AuditTrail: [
+    {
+      RuleCode: RULE-BUSINESS-ONLY,
+      Match: true,
+      OutcomePolicy: PassOnMatch
+    },
+    {
+      RuleCode: RULE-GENERIC-USD,
+      Match: false,
+      OutcomePolicy: PassOnMatch
+    }
+  ],
+  Status: EVALUATED
+}
