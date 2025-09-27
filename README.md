@@ -9,6 +9,32 @@ This repository contains the Phase 1 implementation of the corrroute payment ro
 - `specs/002-payment-routing` – Design documents, data models, OpenAPI/contract definitions, quickstart guide, and task tracker.
 - `config/rules.sample.json` – Sample rule catalog referenced by the development configuration.
 
+## Detailed implementation overview
+
+The engine follows a rule-based design: a JSON catalog describing routing rules is loaded into domain models, transformed into compiled predicates, and evaluated against an incoming payment context.
+
+1. **Rule ingestion**
+  - `JsonRuleCatalogLoader` parses the external catalog into `RoutingRule` records. Each rule includes metadata (code, description, outcome policy) plus optional match predicates (direction, currency, counterparty/customer attributes).
+  - `RuleConditionFactory` converts those optional fields into executable delegates. Missing values act as wildcards, enabling partial matches.
+
+2. **Evaluation pipeline**
+  - `RoutingEngine` takes the hydrated rule set, orders active rules by `PriorityWeight`, and iterates through them for a given `RoutingContext` (payment + counterparty + customer payload).
+  - Each rule evaluation produces a `RuleEvaluationAuditRecord` capturing match status, outcome policy, and priority so the full audit trail can be returned.
+  - Successful `PassOnMatch` rules become GREEN candidates; `FailOnMatch` rules become RED candidates. Corridors that appear in RED automatically suppress the same corridor in GREEN, ensuring exclusivity.
+  - The final `RoutingEvaluationResult` contains decision (`CAN_ROUTE` / `CAN_NOT_ROUTE`), status (`EVALUATED` / `NO_MATCH`), ordered route lists, and the audit trail. Serilog logging hooks (`LoggingExtensions`) emit summary events with duration metrics when enabled.
+
+3. **Testing & verification**
+  - `RuleEvaluationSpec` and `RouteDecisionSpec` assert deterministic rule behavior and decision logic.
+  - `RuleEvaluationPropertyTests` exercises randomized catalogs via FsCheck to guarantee purity and corridor exclusivity.
+  - `ScenarioSnapshotTests` capture end-to-end serialized responses with Verify, providing regression coverage for key scenarios (mixed outcomes, empty catalogs, customer-specific blocks, etc.).
+  - Contract parity tests ensure serialized DTOs align with the published OpenAPI definition.
+
+4. **Tooling & observability**
+  - BenchmarkDotNet harness (`BaselineBenchmarks`) measures performance for catalogs up to 1,000 rules (<10 ms target).
+  - Configuration binder (`RoutingEngineOptionsBinder`) wires the library into host applications, supporting environment overrides for rule paths and logging levels.
+
+This structure keeps the rule engine composable: hosts can feed different catalogs, enrich the `RoutingContext`, or extend predicate generation without altering the core evaluation flow.
+
 ## Prerequisites
 - .NET 9 SDK (build 9.0.305 or later).
 - PowerShell 7+ (or Bash) to execute the documented commands.
