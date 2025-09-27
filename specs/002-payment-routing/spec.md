@@ -42,6 +42,7 @@ Each rule is persisted as a flat structure. Fields below are optional unless fla
 | `PR.CPartyBankBIC` | string | ❌ | Valid BIC11 (e.g., `CHASUS33XXX`) | Uppercase alphanumeric. |
 | `PR.CPartyAccount` | string | ❌ | Up to 34 characters; IBAN or domestic account | Whitespace ignored for comparison. |
 | `PR.CPartyName` | string | ❌ | Up to 140 characters | Trimmed case-insensitive comparison. |
+| `PR.CPartyType` | string | ❌ | `PERSON`, `BUSINESS`, `UNKNOWN` | Derived attribute populated by enrichment. Exact match. |
 | `PR.CustomerId` | string | ❌ | Up to 64 characters | Exact match. |
 | `PR.CustomerIndustry` | string | ❌ | Enumerated codes (e.g., `I001`) | Case-insensitive match. |
 | `PR.CustomerType` | string | ❌ | `INDIVIDUAL`, `CORPORATE` | Normalize to uppercase (typo `COORPORATE` is treated as `CORPORATE`). |
@@ -109,7 +110,8 @@ The routing engine is exposed over HTTP.
       "bankCountryCode": "GR",
       "bankBic": "DEUTDEFFXXX",
       "account": "DE12345678901234567890",
-      "name": "ACME SUPPLIER"
+      "name": "ACME SUPPLIER",
+      "type": "BUSINESS"
     },
     "customer": {
       "id": "CUST-001",

@@ -85,6 +85,9 @@ components:
         name:
           type: string
           maxLength: 140
+        type:
+          type: string
+          enum: [PERSON, BUSINESS, UNKNOWN]
     CustomerContext:
       type: object
       properties:

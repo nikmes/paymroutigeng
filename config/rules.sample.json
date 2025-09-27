@@ -24,6 +24,16 @@
     "PR.CPartyName": "ACME OFFSHORE"
   },
   {
+    "RuleCodeName": "RULE-BUSINESS-ONLY",
+    "RuleDescription": "Route only when counterparty is classified as business.",
+    "OutcomePolicy": "PassOnMatch",
+    "Operator": "ALL",
+    "PriorityWeight": 400,
+    "CorrBankBic": "BNPAFRPPXXX",
+    "RuleStatus": "ON",
+    "PR.CPartyType": "BUSINESS"
+  },
+  {
     "RuleCodeName": "RULE-FALLBACK-DEFAULT",
     "RuleDescription": "Default corridor for unmatched outbound payments.",
     "OutcomePolicy": "PassOnMatch",

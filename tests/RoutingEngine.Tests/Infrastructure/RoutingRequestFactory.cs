@@ -26,6 +26,7 @@ internal static class RoutingRequestFactory
         private string? _bankBic;
         private string? _account;
         private string? _name;
+        private string? _type;
 
         public CounterpartyBuilder WithBankCountryCode(string value)
         {
@@ -51,7 +52,13 @@ internal static class RoutingRequestFactory
             return this;
         }
 
-        public CounterpartyDto Build() => new(_bankCountryCode, _bankBic, _account, _name);
+        public CounterpartyBuilder WithType(string value)
+        {
+            _type = value;
+            return this;
+        }
+
+        public CounterpartyDto Build() => new(_bankCountryCode, _bankBic, _account, _name, _type);
     }
 
     internal sealed class CustomerBuilder

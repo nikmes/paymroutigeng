@@ -50,6 +50,11 @@ internal static class RuleCatalogBuilder
             map["PR.CPartyName"] = definition.CounterpartyName;
         }
 
+        if (!string.IsNullOrWhiteSpace(definition.CounterpartyType))
+        {
+            map["PR.CPartyType"] = definition.CounterpartyType;
+        }
+
         if (!string.IsNullOrWhiteSpace(definition.CustomerId))
         {
             map["PR.CustomerId"] = definition.CustomerId;
@@ -97,6 +102,7 @@ internal sealed record RuleDefinition
     public string? CounterpartyBankBic { get; init; }
     public string? CounterpartyAccount { get; init; }
     public string? CounterpartyName { get; init; }
+    public string? CounterpartyType { get; init; }
     public string? CustomerId { get; init; }
     public string? CustomerIndustry { get; init; }
     public string? CustomerType { get; init; }
