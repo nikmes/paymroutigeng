@@ -58,3 +58,24 @@
 ## Next Steps
 1. After validating tests/benchmarks locally, push changes and ensure CI executes the same commands.
 2. When ready for API exposure (Phase 2+), extend the plan/spec with Minimal API contracts per the constitution.
+
+## Phase 1.2 – Rule Stores and Host
+- Use a rule store to decouple rule source from the engine:
+  - In-memory for tests: `InMemoryRuleStore` (supports add/update/remove at runtime).
+  - File-based for local runs: `JsonFileRuleStore` (watches file mtime and versions snapshots).
+- Evaluate via `RoutingEngineHost`, which caches a `RoutingEngine` per snapshot version and rehydrates on changes.
+
+Example:
+```csharp
+using RoutingEngine.Evaluation;
+using RoutingEngine.Rules;
+
+var store = new JsonFileRuleStore("config/rules.sample.json");
+var host = new RoutingEngineHost(store, logger);
+var result = await host.EvaluateAsync(context);
+
+var mem = new InMemoryRuleStore();
+await mem.AddOrUpdateAsync(rulesFromDb);
+var host2 = new RoutingEngineHost(mem, logger);
+var res2 = await host2.EvaluateAsync(context);
+```

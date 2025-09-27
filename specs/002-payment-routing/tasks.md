@@ -37,6 +37,14 @@
 - [x] T023 Run benchmarks via `dotnet run --project benchmarks/RoutingEngine.Benchmarks --configuration Release` and record latency results (<10 ms) in `specs/002-payment-routing/quickstart.md`.
 - [x] T024 [P] Update documentation (`quickstart.md`, new `README` section if needed) with configuration instructions, Serilog usage, and benchmark outcomes.
 
+## Phase 1.2: Rule Storage Abstraction
+- [x] T101 Define rule snapshot and store interfaces (`RuleCatalogSnapshot`, `IRuleStore`, `IMutableRuleStore`).
+- [x] T102 Implement `InMemoryRuleStore` with thread-safe add/update/remove and versioning.
+- [x] T103 Implement `JsonFileRuleStore` leveraging `JsonRuleCatalogLoader` and version bump on file change.
+- [x] T104 Add `RoutingEngineHost` that caches engine per snapshot version and rehydrates on changes.
+- [x] T105 Unit tests: store semantics (replace, add/update, remove) and host cache invalidation.
+- [x] T106 Docs: update `spec.md` and `quickstart.md` with store usage patterns and examples.
+
 ## Dependencies
 - T002 depends on T001; T003 depends on T002; T004 depends on T002.
 - T005–T010 depend on setup (T001–T003) but can run in parallel with each other.
